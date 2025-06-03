@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Disney Character Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .time, #feedback {
+            font-weight: bold;
+        }
+        button.choice {
+            display: block;
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button.choice:hover {
+            background-color: #004d40;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intro">
+        <h1>Welcome to the Disney Quiz!</h1>
+        <button id="start-quiz">Start Quiz</button>
+    </div>
+
+    <div class="time hidden"></div>
+
+    <div id="questions" class="hidden">
+        <h2 id="currentQuestion"></h2>
+        <div id="answer"></div>
+    </div>
+
+    <div id="feedback" class="hidden"></div>
+
+    <div id="score" class="hidden">
+        <h2>Quiz Complete!</h2>
+        <p>Your Score: <span id="finalScore"></span></p>
+        <form id="submit">
+            <input type="text" id="playerName" placeholder="Enter your name" required />
+            <button type="submit">Save Score</button>
+        </form>
+    </div>
+
+    <script>
+        const startBtn = document.querySelector("#start-quiz");
+        const introSection = document.querySelector("#intro");
+        const timeDisplay = document.querySelector(".time");
+        const questionSection = document.querySelector("#questions");
+        const questionTitle = document.querySelector("#currentQuestion");
+        const answerButtons = document.querySelector("#answer");
+        const resultDisplay = document.querySelector("#feedback");
+        const finalScreen = document.querySelector("#score");
+        const scoreSubmit = document.querySelector("#submit");
+
+        const questionsList = [
+            {
+                title: "What kind of fish is Nemo?",
+                choices: ["Goldfish", "clown fish", "Blue Hippo", "Eagle Ray"],
+                rightAnswer: "clown fish"
+            },
+            {
+                title: "Who is Ariel's best friend?",
+                choices: ["Flounder", "Flanders", "Ned", "Junior"],
+                rightAnswer: "Flounder"
+            },
+            {
+                title: "Which character is blue in Aladdin?",
+                choices: ["The genie", "Papa Smurf", "Blue Man Group", "Blue marker"],
+                rightAnswer: "The genie"
+            },
+            {
+                title: "What Olaf likes the most?",
+                choices: ["Warm Hugs", "A carrot", "A Flying Squirrel", "A snowball"],
+                rightAnswer: "Warm Hugs"
+            }
+        ];
+
+        let currentIdx = 0;
+        let timer;
+        let countdown = 32;
+
+        function initiateTimer() {
+            timer = setInterval(() => {
+                timeDisplay.textContent = countdown + " Seconds Left";
+                countdown--;
+
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    concludeQuiz();
+                }
+            }, 1000);
+        }
+
+        function showQuestion() {
+            const currentQ = questionsList[currentIdx];
+            questionTitle.textContent = currentQ.title;
+            answerButtons.innerHTML = "";
+
+            currentQ.choices.forEach((choice, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "choice";
+                btn.value = choice;
+                btn.textContent = `${idx + 1}. ${choice}`;
+                btn.onclick = handleAnswer;
+                answerButtons.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(event) {
+            if (!event.target.matches(".choice")) return;
+
+            const chosen = event.target.value;
+            const correct = questionsList[currentIdx].rightAnswer;
+
+            if (chosen !== correct) {
+                countdown -= 5;
+                resultDisplay.textContent = "Wrong";
+            } else {
+                resultDisplay.textContent = "Right";
+            }
+
+            resultDisplay.classList.remove("hidden");
+            setTimeout(() => resultDisplay.classList.add("hidden"), 1000);
+
+            currentIdx++;
+            if (countdown <= 0 || currentIdx === questionsList.length) {
+                concludeQuiz();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function concludeQuiz() {
+            clearInterval(timer);
+            timeDisplay.classList.add("hidden");
+            questionSection.classList.add("hidden");
+            finalScreen.classList.remove("hidden");
+            document.querySelector("#finalScore").textContent = countdown;
+        }
+
+        startBtn.addEventListener("click", () => {
+            introSection.classList.add("hidden");
+            questionSection.classList.remove("hidden");
+            timeDisplay.classList.remove("hidden");
+            finalScreen.classList.add("hidden");
+            initiateTimer();
+            showQuestion();
+        });
+
+        scoreSubmit.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const nameInput = document.querySelector("#playerName").value;
+            const scores = JSON.parse(localStorage.getItem("playerScore")) || [];
+            const entry = { name: nameInput, score: countdown };
+            scores.push(entry);
+            localStorage.setItem("playerScore", JSON.stringify(scores));
+        });
+    </script>
+
+</body>
+</html>
